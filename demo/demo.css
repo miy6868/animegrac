@@ -1,0 +1,19 @@
+:root { --panel-w: 320px; }
+html, body { margin: 0; height: 100%; background: #15161c; color: #e8e8ee; font-family: system-ui, sans-serif; }
+body { display: flex; flex-direction: column; }
+#nav { flex: none; display: flex; gap: 14px; align-items: center; padding: 8px 14px; font-size: 13px; background: #1d1f28; border-bottom: 1px solid #2a2d3a; flex-wrap: wrap; }
+#nav a { color: #aab4d4; text-decoration: none; }
+#nav a.on, #nav a:hover { color: #fff; }
+body.capture #nav { display: none; }
+#app { display: flex; flex: 1; min-height: 0; }
+#viewport { flex: 1; display: flex; align-items: center; justify-content: center; min-width: 0; }
+#viewport canvas { display: block; box-shadow: 0 6px 30px rgba(0,0,0,.35); }
+#panel { width: var(--panel-w); flex: none; overflow-y: auto; }
+#panel .lil-gui.root { width: 100%; --width: 100%; }
+body.capture #panel { display: none; }
+body.capture #viewport canvas { box-shadow: none; }
+@media (max-width: 760px) {
+  #app { flex-direction: column; }
+  #viewport { flex: 1 1 60%; }
+  #panel { width: 100%; flex: 1 1 40%; }
+}
