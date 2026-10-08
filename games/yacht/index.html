@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<title>Yacht · anime-style</title>
+<link rel="icon" href="data:," />
+<style>
+  :root {
+    --ink: #234a8c;
+    --line: #3b7ad6;
+    --pill: #ffffff;
+    --accent: #ffcc33;
+    --accent-line: #e0962a;
+    --font: ui-rounded, 'Trebuchet MS', 'Arial Rounded MT Bold', system-ui, sans-serif;
+  }
+  body.sunset {
+    --ink: #7a3466;
+    --line: #d4607e;
+    --pill: #fff6ef;
+  }
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #64aef0;
+    font-family: var(--font);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #game canvas { display: block; }
+  #hud { position: fixed; inset: 0; pointer-events: none; color: var(--ink); }
+  .pill {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--pill);
+    border: 2.5px solid var(--line);
+    border-radius: 999px;
+    box-shadow: 0 3px 0 var(--line);
+    font-weight: 800;
+    padding: 5px 14px 5px 8px;
+    font-size: 20px;
+    line-height: 1;
+  }
+  #score-pill { top: 14px; left: 14px; }
+  .ring-icon {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 5px solid var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-line), inset 0 0 0 2px var(--accent-line);
+  }
+  #score { min-width: 1ch; font-size: 22px; }
+  #speed-pill { top: 14px; right: 82px; padding: 5px 12px; }
+  #speed-pill small, #sail-pill small { font-size: 12px; opacity: 0.75; font-weight: 700; }
+  #wind {
+    position: absolute;
+    top: 8px;
+    right: 14px;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: var(--pill);
+    border: 2.5px solid var(--line);
+    box-shadow: 0 3px 0 var(--line);
+    box-sizing: border-box;
+  }
+  #wind-arrow { position: absolute; inset: 5px; transition: none; }
+  #wind-label { position: absolute; top: 64px; right: 14px; width: 54px; text-align: center; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; }
+  #sail-pill { left: 14px; bottom: 16px; padding: 5px 12px 5px 6px; }
+  #sail-bar { width: 12px; height: 26px; border-radius: 6px; border: 2px solid var(--line); position: relative; overflow: hidden; background: #e8f1ff; }
+  body.sunset #sail-bar { background: #fbe6ea; }
+  #sail-fill { position: absolute; left: 0; right: 0; bottom: 0; height: 75%; background: var(--line); }
+  #hint {
+    position: absolute;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    padding: 7px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: opacity 0.6s;
+  }
+  #hint.gone { opacity: 0; }
+  #hint b { color: #e0962a; }
+  #look {
+    position: absolute;
+    top: 86px;
+    right: 14px;
+    pointer-events: auto;
+    cursor: pointer;
+    font: 800 12px var(--font);
+    color: var(--ink);
+    padding: 5px 10px;
+  }
+  #popups { position: absolute; left: 50%; top: 34%; }
+  .pop {
+    position: absolute;
+    transform: translate(-50%, 0);
+    font-size: 34px;
+    font-weight: 900;
+    color: var(--accent);
+    -webkit-text-stroke: 2px var(--accent-line);
+    animation: rise 1s ease-out forwards;
+  }
+  @keyframes rise { from { transform: translate(-50%, 0) scale(0.6); opacity: 1; } to { transform: translate(-50%, -60px) scale(1.1); opacity: 0; } }
+  /* touch controls (shown on coarse pointers, or with ?touch) */
+  .pad { position: absolute; bottom: 18px; display: none; gap: 12px; pointer-events: auto; }
+  body.touch .pad { display: flex; }
+  body.touch #sail-pill { bottom: 104px; }
+  body.touch #hint { bottom: auto; top: 76px; }
+  #pad-steer { left: 16px; }
+  #pad-sail { right: 16px; flex-direction: column; gap: 8px; }
+  .pad button {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: 3px solid var(--line);
+    background: var(--pill);
+    box-shadow: 0 4px 0 var(--line);
+    color: var(--ink);
+    font: 900 26px var(--font);
+    touch-action: none;
+  }
+  #pad-sail button { width: 84px; height: 42px; border-radius: 16px; font-size: 14px; white-space: nowrap; }
+  .pad button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--line); }
+  @media (max-width: 760px) {
+    #hint { bottom: auto; top: 76px; font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+<div id="game"></div>
+<div id="hud">
+  <div class="pill" id="score-pill"><span class="ring-icon"></span><span id="score">0</span></div>
+  <div class="pill" id="speed-pill"><span id="speed">0.0</span><small>kn</small></div>
+  <div id="wind">
+    <svg id="wind-arrow" viewBox="-20 -20 40 40">
+      <path d="M0 -15 L8 1 L2.5 -1 L2.5 14 L-2.5 14 L-2.5 -1 L-8 1 Z" fill="#ffcc33" stroke="#e0962a" stroke-width="2.2" stroke-linejoin="round" />
+    </svg>
+  </div>
+  <div id="wind-label">WIND</div>
+  <div class="pill" id="sail-pill"><div id="sail-bar"><div id="sail-fill"></div></div><small>SAIL</small><span id="sail-pct">75%</span></div>
+  <div class="pill" id="hint">Collect the <b>golden rings</b> · A/D steer · W/S sails · T sunset</div>
+  <button class="pill" id="look" type="button">DAY / SUNSET</button>
+  <div id="popups"></div>
+  <div class="pad" id="pad-steer"><button data-key="left" type="button">&#9664;</button><button data-key="right" type="button">&#9654;</button></div>
+  <div class="pad" id="pad-sail"><button data-key="up" type="button">SAIL +</button><button data-key="down" type="button">SAIL &minus;</button></div>
+</div>
+<script type="module" src="./main.js"></script>
+</body>
+</html>

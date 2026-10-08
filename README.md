@@ -30,6 +30,7 @@ npm run dev
 | `/examples/model.html` | 내 모델(.glb/.gltf/.vrm) 드래그&드롭 → 화풍 적용, 재질 종류 조정, 매핑/파라미터 JSON 복사 |
 | `/examples/minimal.html` | 최소 사용 예 |
 | `/examples/custom-loop.html` | AnimeStage 없이 자체 렌더러/게임 루프에 통합 |
+| `/games/yacht/index.html` | 엔진으로 만든 미니 게임: 요트로 바다 항해하며 금색 링 모으기 (A/D 조타, W/S 돛, T 낮/노을) |
 
 ## 스크립트
 
