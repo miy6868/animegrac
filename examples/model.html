@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Anime Style · Your Model</title>
+<link rel="stylesheet" href="/demo/demo.css" />
+<style>
+  #drop { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(20,22,30,.7); color: #fff; font-size: 22px; z-index: 10; pointer-events: none; }
+  body.dragging #drop { display: flex; }
+  #status { position: fixed; left: 12px; bottom: 10px; font-size: 12px; opacity: .75; }
+  body.capture #status { display: none; }
+</style>
+</head>
+<body>
+<nav id="nav">
+  <b>Anime Flat Style</b>
+  <a href="/">데모 씬</a>
+  <a href="/examples/model.html" class="on">내 모델 (glTF/VRM)</a>
+  <a href="/examples/minimal.html">최소 예제</a>
+  <a href="/examples/custom-loop.html">게임 루프 통합</a>
+</nav>
+<div id="app">
+  <div id="viewport"></div>
+  <div id="panel"></div>
+</div>
+<div id="drop">.glb / .gltf / .vrm 파일을 놓으세요</div>
+<div id="status"></div>
+<script type="module" src="./model.js"></script>
+</body>
+</html>

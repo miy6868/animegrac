@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>anime-style · custom loop</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#111}canvas{display:block}</style>
+</head>
+<body>
+<script type="module">
+// STYLE.md §3.4: using the style inside your own renderer / game loop (no AnimeStage).
+import * as THREE from 'three';
+import { AnimeStyle } from 'anime-style';
+
+const q = new URLSearchParams(location.search);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(q.has('capture') ? 1 : Math.min(2, devicePixelRatio));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(30, innerWidth / innerHeight, 0.1, 200);
+
+const style = new AnimeStyle(q.get('preset') || 'skyPop');
+// the default atmosphere range is character-scale (metres behind the subject);
+// a level is bigger, so widen it
+style.setParams({ atmosphere: { start: 1.5, end: 9, strength: 0.4 } });
+style.bindScene(scene);
+
+const key = new THREE.DirectionalLight(0xffffff, 1);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+Object.assign(key.shadow.camera, { left: -6, right: 6, top: 6, bottom: -6, near: 0.5, far: 30 });
+key.shadow.bias = -0.0004;
+key.shadow.normalBias = 0.02;
+scene.add(key, key.target);
+
+// a "level" built with ordinary three.js materials, converted in one call
+const level = new THREE.Group();
+const std = (color) => new THREE.MeshStandardMaterial({ color });
+for (let i = 0; i < 14; i++) {
+  const a = (i / 14) * Math.PI * 2;
+  const h = 0.4 + (i % 3) * 0.35;
+  const m = new THREE.Mesh(new THREE.BoxGeometry(0.5, h, 0.5).translate(0, h / 2, 0), std(i % 2 ? '#ffffff' : '#ffd166'));
+  m.position.set(Math.cos(a) * 3.2, 0, Math.sin(a) * 3.2);
+  m.rotation.y = a;
+  level.add(m);
+}
+const tree = new THREE.Group();
+tree.add(new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.6, 16).translate(0, 0.3, 0), std('#8d5a3b')));
+tree.add(new THREE.Mesh(new THREE.IcosahedronGeometry(0.42, 1).translate(0, 0.95, 0), std('#3fbf7f')));
+tree.position.set(0.8, 0, -0.6);
+level.add(tree);
+const player = new THREE.Mesh(new THREE.CapsuleGeometry(0.18, 0.4, 8, 24).translate(0, 0.38, 0), std('#ef476f'));
+player.name = 'player';
+level.add(player);
+scene.add(level);
+const report = style.applyTo(level);
+console.table(report);
+
+const floor = style.stylize(new THREE.Mesh(new THREE.PlaneGeometry(100, 100).rotateX(-Math.PI / 2)), { kind: 'ground', color: 'auto', followBackground: true });
+floor.castShadow = false;
+scene.add(floor);
+
+function tick(t, dt) {
+  player.position.set(Math.cos(t * 0.6) * 1.6, 0, Math.sin(t * 0.6) * 1.6);
+  camera.position.set(player.position.x * 0.4 + 5.5, 4.2, player.position.z * 0.4 + 7.5);
+  camera.lookAt(player.position.x, 0.5, player.position.z);
+  style.update(renderer, camera, { time: t, focusDistance: camera.position.distanceTo(player.position) });
+  key.position.copy(player.position).addScaledVector(style.lightDirection, 10);
+  key.target.position.copy(player.position);
+  renderer.render(scene, camera);
+}
+addEventListener('resize', () => {
+  renderer.setSize(innerWidth, innerHeight);
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+});
+window.__renderFrame = (t, dt) => {
+  tick(t, dt);
+  return renderer.domElement.toDataURL('image/png');
+};
+tick(1.2, 0);
+window.__ready = true;
+if (!q.has('capture')) {
+  const clock = new THREE.Clock();
+  renderer.setAnimationLoop(() => tick(clock.getElapsedTime(), clock.getDelta()));
+}
+</script>
+</body>
+</html>
